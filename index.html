@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0d0221">
+<title>Генератор судьбы</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --bg1: #0d0221;
+    --bg2: #1a0b2e;
+    --accent: #a855f7;
+    --accent2: #ec4899;
+    --gold: #fbbf24;
+    --text: #f3e8ff;
+    --muted: #c4b5fd;
+  }
+
+  html, body {
+    min-height: 100%;
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+    color: var(--text);
+    overflow-x: hidden;
+  }
+
+  body {
+    background: linear-gradient(-45deg, #0d0221, #1a0b2e, #33126b, #4c1d95);
+    background-size: 400% 400%;
+    animation: gradientShift 16s ease infinite;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px 48px;
+  }
+
+  @keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  #stars {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .content {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 560px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 28px;
+    flex: 1;
+    justify-content: center;
+  }
+
+  header {
+    text-align: center;
+    animation: fadeInDown .9s ease both;
+  }
+
+  .title {
+    font-size: clamp(2.2rem, 8vw, 3.4rem);
+    font-weight: 800;
+    letter-spacing: 1px;
+    background: linear-gradient(90deg, #fbbf24, #ec4899, #a855f7);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 0 18px rgba(168, 85, 247, .45));
+    animation: titleGlow 3s ease-in-out infinite;
+  }
+
+  @keyframes titleGlow {
+    0%, 100% { filter: drop-shadow(0 0 12px rgba(168, 85, 247, .35)); }
+    50% { filter: drop-shadow(0 0 26px rgba(236, 72, 153, .6)); }
+  }
+
+  .subtitle {
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: clamp(.95rem, 3vw, 1.1rem);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    opacity: .85;
+  }
+
+  .card {
+    width: 100%;
+    padding: 32px 24px;
+    border-radius: 28px;
+    background: rgba(255, 255, 255, .06);
+    border: 1px solid rgba(255, 255, 255, .12);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, .5);
+    text-align: center;
+    animation: fadeInUp .9s ease .15s both;
+  }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(40px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-40px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .prompt {
+    color: var(--muted);
+    font-size: .95rem;
+    letter-spacing: 1px;
+    margin-bottom: 18px;
+  }
+
+  .word-box {
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 8px;
+    border: 2px dashed rgba(251, 191, 36, .35);
+    border-radius: 20px;
+    margin-bottom: 24px;
+    background: rgba(13, 2, 33, .4);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .word-box:empty::before {
+    content: "✦";
+    font-size: 2.4rem;
+    opacity: .25;
+  }
+
+  #output {
+    font-size: clamp(1.6rem, 6vw, 2.4rem);
+    font-weight: 700;
+    line-height: 1.3;
+    word-break: break-word;
+    color: var(--gold);
+    text-shadow: 0 0 24px rgba(251, 191, 36, .45);
+  }
+
+  #output.spin {
+    animation: popIn .55s cubic-bezier(.175, .885, .32, 1.275);
+  }
+
+  @keyframes popIn {
+    0% { opacity: 0; transform: scale(.2) rotate(-8deg); filter: blur(6px); }
+    60% { transform: scale(1.15) rotate(2deg); }
+    100% { opacity: 1; transform: scale(1) rotate(0); filter: blur(0); }
+  }
+
+  .btn-main {
+    cursor: pointer;
+    width: 100%;
+    padding: 18px 24px;
+    border: none;
+    border-radius: 999px;
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #fff;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    box-shadow: 0 10px 30px rgba(168, 85, 247, .45);
+    transition: transform .15s ease, box-shadow .25s ease, filter .25s ease;
+    user-select: none;
+  }
+
+  .btn-main:active { transform: scale(.95); }
+  .btn-main:hover { filter: brightness(1.12); box-shadow: 0 14px 40px rgba(236, 72, 153, .55); }
+
+  .hint {
+    margin-top: 14px;
+    font-size: .8rem;
+    color: rgba(196, 181, 253, .6);
+  }
+
+  .history-title {
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: .85rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  #history {
+    list-style: none;
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  #history li {
+    background: rgba(255, 255, 255, .05);
+    border: 1px solid rgba(255, 255, 255, .08);
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: .98rem;
+    color: var(--text);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    animation: slideIn .4s ease both;
+  }
+
+  #history li .when {
+    color: var(--muted);
+    font-size: .75rem;
+    white-space: nowrap;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-24px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .footer {
+    position: relative;
+    z-index: 1;
+    margin-top: 20px;
+    font-size: .8rem;
+    color: rgba(196, 181, 253, .5);
+    text-align: center;
+  }
+
+  .tg-banner {
+    display: none;
+    width: 100%;
+    padding: 12px 20px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(37, 211, 102, .18), rgba(41, 128, 185, .18));
+    border: 1px solid rgba(37, 211, 102, .45);
+    text-align: center;
+    font-size: 1.02rem;
+    font-weight: 700;
+    color: #a7f3d0;
+    letter-spacing: .5px;
+    animation: fadeInUp .8s ease .3s both;
+  }
+
+  .tg-banner.visible { display: block; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; }
+    body { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+
+<div class="content">
+  <header>
+    <h1 class="title">Генератор судьбы</h1>
+    <p class="subtitle">Судьба говорит через слова</p>
+  </header>
+
+  <div class="tg-banner" id="tg-banner">☄️ телеграмовский особый случай ☄️</div>
+
+  <div class="card">
+    <p class="prompt">Сегодня твоё слово —</p>
+    <div class="word-box"><span id="output"></span></div>
+    <button class="btn-main" id="btn">Узнать судьбу</button>
+    <p class="hint">нажми кнопку — судьба изменит твой день</p>
+  </div>
+
+  <div class="card" id="history-card">
+    <div class="history-title">✦ История ✦</div>
+    <ul id="history"></ul>
+  </div>
+</div>
+
+<div class="footer">сделано с любовью и случайностью</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* Детект открытия из Telegram (встроенный браузер или Web App) */
+  var ua = (navigator.userAgent || "").toLowerCase();
+  var isTelegram =
+    ua.indexOf("telegram") !== -1 ||
+    ua.indexOf("telegrambot") !== -1 ||
+    ua.indexOf("telegramwebapp") !== -1 ||
+    (typeof window.Telegram !== "undefined" && window.Telegram.WebApp);
+
+  if (isTelegram) {
+    var tgBanner = document.getElementById("tg-banner");
+    if (tgBanner) tgBanner.classList.add("visible");
+  }
+
+  var WORDS = [
+    "хуй", "ырка", "абоба", "пиво", "пельмени", "Здесь могла быть ваша реклама","404-послание не найдено","ы"
+  ];
+
+  var output = document.getElementById("output");
+  var btn = document.getElementById("btn");
+  var historyList = document.getElementById("history");
+  var MAX_HISTORY = 12;
+
+  function pick() {
+    return WORDS[Math.floor(Math.random() * WORDS.length)];
+  }
+
+  function timeNow() {
+    var d = new Date();
+    return d.getHours() + ":" + String(d.getMinutes()).padStart(2, "0");
+  }
+
+  function reveal(word) {
+    output.classList.remove("spin");
+    void output.offsetWidth; /* перезапуск CSS-анимации */
+    output.textContent = word;
+    output.classList.add("spin");
+  }
+
+  function addToHistory(word) {
+    var li = document.createElement("li");
+    var span = document.createElement("span");
+    span.textContent = word;
+    var when = document.createElement("span");
+    when.className = "when";
+    when.textContent = timeNow();
+    li.appendChild(span);
+    li.appendChild(when);
+    historyList.insertBefore(li, historyList.firstChild);
+    while (historyList.children.length > MAX_HISTORY) {
+      historyList.removeChild(historyList.lastChild);
+    }
+  }
+
+  btn.addEventListener("click", function () {
+    var word = pick();
+    reveal(word);
+    addToHistory(word);
+  });
+
+  reveal(pick());
+
+  /* ---- Фон-звёзды ---- */
+  var canvas = document.getElementById("stars");
+  var ctx = canvas.getContext("2d");
+  var stars = [];
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener("resize", resize);
+
+  function initStars(n) {
+    for (var i = 0; i < n; i++) {
+      stars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: Math.random() * 1.8 + 0.3,
+        vx: (Math.random() - 0.5) * 0.15,
+        vy: (Math.random() - 0.5) * 0.15,
+        tw: Math.random() * Math.PI * 2
+      });
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (var i = 0; i < stars.length; i++) {
+      var s = stars[i];
+      s.x += s.vx;
+      s.y += s.vy;
+      s.tw += 0.02;
+      if (s.x < 0) s.x = canvas.width;
+      if (s.x > canvas.width) s.x = 0;
+      if (s.y < 0) s.y = canvas.height;
+      if (s.y > canvas.height) s.y = 0;
+      var alpha = 0.4 + 0.6 * Math.abs(Math.sin(s.tw));
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(255,255,255," + alpha.toFixed(2) + ")";
+      ctx.fill();
+    }
+    requestAnimationFrame(draw);
+  }
+
+  initStars(Math.min(90, Math.floor(window.innerWidth / 12)));
+  draw();
+})();
+</script>
+</body>
+</html>
